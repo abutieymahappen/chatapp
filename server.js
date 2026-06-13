@@ -15,65 +15,120 @@ const io = new Server(server)
 app.use(express.static(path.join(__dirname, "public")))
 
 app.get("/", (req, res) => {
-res.sendFile(path.join(__dirname, "public", "index.html"))
+  res.sendFile(path.join(__dirname, "public", "index.html"))
 })
 
 const users = {}
 
+// SOCKET.IO
 io.on("connection", (socket) => {
 
-socket.on("join", (username) => {
+  console.log("User connected:", socket.id)
 
-users[socket.id] = username
+  // JOIN
+  socket.on("join", (username) => {
 
-io.emit("system", `${username} joined the chat`)
+    users[socket.id] = {
+      id: socket.id,
+      username
+    }
 
-io.emit("users", Object.values(users))
+    io.emit("users", Object.values(users))
 
-})
+    socket.broadcast.emit(
+      "system",
+      `${username} joined the chat`
+    )
 
-socket.on("typing", () => {
+  })
 
-socket.broadcast.emit(
-  "typing",
-  users[socket.id]
-)
+  // GLOBAL MESSAGE
+  socket.on("message", (message) => {
 
-})
+    const user = users[socket.id]
 
-socket.on("message", (message) => {
+    if (!user) return
 
-io.emit("message", {
-  user: users[socket.id],
-  text: message,
-  time: new Date().toLocaleTimeString()
-})
+    io.emit("message", {
+      user: user.username,
+      text: message,
+      time: new Date().toLocaleTimeString()
+    })
 
-})
+  })
 
-socket.on("disconnect", () => {
+  // PRIVATE MESSAGE
+  socket.on("privateMessage", (data) => {
 
-const username = users[socket.id]
+    const sender = users[socket.id]
 
-delete users[socket.id]
+    if (!sender) return
 
-io.emit("users", Object.values(users))
+    const msg = {
+      from: sender.username,
+      text: data.text,
+      time: new Date().toLocaleTimeString()
+    }
 
-if(username){
+    io.to(data.to).emit(
+      "privateMessage",
+      msg
+    )
 
-  io.emit(
-    "system",
-    `${username} left the chat`
-  )
+    socket.emit(
+      "privateMessage",
+      {
+        from: "You",
+        text: data.text,
+        time: msg.time
+      }
+    )
 
-}
+  })
 
-})
+  // TYPING
+  socket.on("typing", () => {
+
+    const user = users[socket.id]
+
+    if (!user) return
+
+    socket.broadcast.emit(
+      "typing",
+      user.username
+    )
+
+  })
+
+  // DISCONNECT
+  socket.on("disconnect", () => {
+
+    const user = users[socket.id]
+
+    if (user) {
+
+      socket.broadcast.emit(
+        "system",
+        `${user.username} left the chat`
+      )
+
+      delete users[socket.id]
+
+      io.emit(
+        "users",
+        Object.values(users)
+      )
+
+    }
+
+    console.log("User disconnected")
+
+  })
 
 })
 
 const PORT = process.env.PORT || 3000
 
 server.listen(PORT, () => {
-console.log("Server running on ${PORT}")
+  console.log(`🚀 BROSKIX Chat running on port ${PORT}`)
 })
