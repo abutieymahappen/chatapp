@@ -1,8 +1,11 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BROSKIX Chat</title><style>
+<title>BROSKIX Chat</title>
+
+<style>
 *{
 margin:0;
 padding:0;
@@ -15,32 +18,49 @@ height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-background:#17212b;
+background:linear-gradient(
+135deg,
+#0f172a,
+#1e1b4b,
+#0ea5e9
+);
+background-size:400% 400%;
+animation:bg 10s ease infinite;
+overflow:hidden;
+}
+
+@keyframes bg{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
 }
 
 .card{
 width:90%;
-max-width:380px;
-background:#242f3d;
+max-width:420px;
 padding:30px;
-border-radius:16px;
-text-align:center;
-box-shadow:0 10px 30px rgba(0,0,0,.4);
+border-radius:25px;
+backdrop-filter:blur(20px);
+background:rgba(255,255,255,.08);
+border:1px solid rgba(255,255,255,.15);
+box-shadow:0 0 30px rgba(0,0,0,.3);
+color:white;
 }
 
 .logo{
-font-size:32px;
+font-size:40px;
+text-align:center;
 margin-bottom:10px;
 }
 
 h1{
-color:white;
-font-size:24px;
+text-align:center;
 margin-bottom:8px;
 }
 
 p{
-color:#9aa7b1;
+text-align:center;
+color:#cbd5e1;
 margin-bottom:25px;
 }
 
@@ -48,47 +68,170 @@ input{
 width:100%;
 padding:14px;
 border:none;
-border-radius:10px;
-background:#1b2530;
-color:white;
-font-size:16px;
-margin-bottom:15px;
 outline:none;
+border-radius:14px;
+background:rgba(255,255,255,.08);
+color:white;
+margin-bottom:15px;
+font-size:15px;
 }
 
 button{
 width:100%;
 padding:14px;
 border:none;
-border-radius:10px;
-background:#2aabee;
-color:white;
-font-size:16px;
+border-radius:14px;
 font-weight:bold;
+font-size:15px;
 cursor:pointer;
+background:linear-gradient(
+90deg,
+#3b82f6,
+#8b5cf6,
+#06b6d4
+);
+color:white;
 }
 
-button:hover{
-opacity:.9;
+.step{
+display:none;
 }
-</style></head><body><div class="card">
-<div class="logo">✈️</div>
-<h1>BROSKIX Chat</h1>
-<p>Welcome back</p><input id="username" placeholder="Enter username"><button onclick="joinChat()">
-Start Messaging
+
+.active{
+display:block;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+<div class="logo">🧸</div>
+<h1>BROSKIX CHAT</h1>
+<p>Messaging Platform</p>
+
+<div id="step1" class="step active">
+
+<input
+id="email"
+type="email"
+placeholder="Enter Email">
+
+<button onclick="sendOTP()">
+Continue
 </button>
-</div><script>
-function joinChat(){
-const username =
-document.getElementById("username").value.trim()
 
-if(!username){
-alert("Enter username")
+</div>
+
+<div id="step2" class="step">
+
+<input
+id="otp"
+placeholder="Enter Verification Code">
+
+<button onclick="verifyOTP()">
+Verify
+</button>
+
+</div>
+
+<div id="step3" class="step">
+
+<input
+id="username"
+placeholder="Choose Username">
+
+<button onclick="finishSetup()">
+Enter Chat
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const saved =
+localStorage.getItem("broskix_user")
+
+if(saved){
+location.href="/chat.html"
+}
+
+let code=""
+
+function sendOTP(){
+
+const email =
+document.getElementById("email").value
+
+if(!email){
+alert("Enter Email")
 return
 }
 
-localStorage.setItem("username", username)
-window.location.href = "/chat.html"
+code =
+Math.floor(
+100000 + Math.random()*900000
+)
+
+alert(
+"Verification Code: " + code
+)
+
+document
+.getElementById("step1")
+.classList.remove("active")
+
+document
+.getElementById("step2")
+.classList.add("active")
 }
-</script></body>
-</html>
+
+function verifyOTP(){
+
+const entered =
+document.getElementById("otp").value
+
+if(entered != code){
+alert("Wrong Code")
+return
+}
+
+document
+.getElementById("step2")
+.classList.remove("active")
+
+document
+.getElementById("step3")
+.classList.add("active")
+}
+
+function finishSetup(){
+
+const username =
+document.getElementById("username").value
+
+if(!username){
+alert("Choose Username")
+return
+}
+
+const account = {
+email:
+document.getElementById("email").value,
+username
+}
+
+localStorage.setItem(
+"broskix_user",
+JSON.stringify(account)
+)
+
+location.href="/chat.html"
+}
+
+</script>
+
+</body>
+  </html>
