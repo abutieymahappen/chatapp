@@ -1,52 +1,36 @@
 import express from "express"
 import { createServer } from "http"
 import { Server } from "socket.io"
+import path from "path"
+import { fileURLToPath } from "url"
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const app = express()
 const server = createServer(app)
 const io = new Server(server)
 
-app.use(express.static("public"))
+app.use(express.static(path.join(__dirname, "public")))
 
-let online = 0
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"))
+})
 
 io.on("connection", (socket) => {
+  console.log("User connected")
 
-  online++
-  io.emit("online", online)
-
-  socket.on("join", (username) => {
-    socket.username = username
-
-    io.emit("message", {
-      user: "SYSTEM",
-      text: `${username} joined the chat`
-    })
-  })
-
-  socket.on("message", (text) => {
-    io.emit("message", {
-      user: socket.username,
-      text
-    })
+  socket.on("message", (msg) => {
+    io.emit("message", msg)
   })
 
   socket.on("disconnect", () => {
-
-    online--
-    io.emit("online", online)
-
-    if (socket.username) {
-      io.emit("message", {
-        user: "SYSTEM",
-        text: `${socket.username} left the chat`
-      })
-    }
+    console.log("User disconnected")
   })
 })
 
 const PORT = process.env.PORT || 3000
 
 server.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`)
+  console.log(`Server running on port ${PORT}`)
 })
