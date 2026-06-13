@@ -2,12 +2,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BROSKIX CHAT</title><style>
+<title>BROSKIX Chat</title><style>
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial,sans-serif;
+font-family:system-ui,sans-serif;
 }
 
 body{
@@ -15,90 +15,80 @@ height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-background:#0f172a;
-color:white;
+background:#17212b;
 }
 
-.container{
+.card{
 width:90%;
-max-width:400px;
-background:#1e293b;
+max-width:380px;
+background:#242f3d;
 padding:30px;
-border-radius:15px;
+border-radius:16px;
 text-align:center;
-box-shadow:0 0 20px rgba(0,0,0,.3);
+box-shadow:0 10px 30px rgba(0,0,0,.4);
 }
 
 .logo{
-font-size:30px;
-font-weight:bold;
+font-size:32px;
 margin-bottom:10px;
 }
 
-.desc{
-color:#cbd5e1;
-margin-bottom:20px;
+h1{
+color:white;
+font-size:24px;
+margin-bottom:8px;
+}
+
+p{
+color:#9aa7b1;
+margin-bottom:25px;
 }
 
 input{
 width:100%;
-padding:12px;
+padding:14px;
 border:none;
 border-radius:10px;
+background:#1b2530;
+color:white;
+font-size:16px;
 margin-bottom:15px;
 outline:none;
-font-size:16px;
 }
 
 button{
 width:100%;
-padding:12px;
+padding:14px;
 border:none;
 border-radius:10px;
-background:#2563eb;
+background:#2aabee;
 color:white;
 font-size:16px;
+font-weight:bold;
 cursor:pointer;
 }
 
 button:hover{
 opacity:.9;
 }
-
-.footer{
-margin-top:15px;
-font-size:13px;
-color:#94a3b8;
-}
-</style></head><body><div class="container"><div class="logo">BROSKIX CHAT</div><div class="desc">
-Connect and chat in real time.
-</div><input
-type="text"
-id="username"
-placeholder="Enter Username">
-
-<button onclick="joinChat()">
-Join Chat
-</button><div class="footer">
-Powered by BROSKIX
-</div></div><script>
+</style></head><body><div class="card">
+<div class="logo">✈️</div>
+<h1>BROSKIX Chat</h1>
+<p>Welcome back</p><input id="username" placeholder="Enter username"><button onclick="joinChat()">
+Start Messaging
+</button>
+</div><script>
 function joinChat(){
-
 const username =
 document.getElementById("username").value.trim()
 
 if(!username){
-alert("Enter a username")
+alert("Enter username")
 return
 }
 
-localStorage.setItem(
-"username",
-username
-)
-
-window.location.href =
-"/chat.html"
+localStorage.setItem("username", username)
+window.location.href = "/chat.html"
 }
 </script></body>
 </html>
