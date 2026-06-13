@@ -11,39 +11,27 @@ const app = express()
 const server = createServer(app)
 const io = new Server(server)
 
-// static files
 app.use(express.static(path.join(__dirname, "public")))
 
-// route
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"))
-})
-
-// users storage
+// USERS
 const users = {}
 
-// SOCKET CONNECTION
+// CHAT STORAGE (THIS MAKES IT "TELEGRAM LIKE")
+const chats = {
+  global: []
+}
+
+// helper
+function getDMKey(a, b) {
+  return [a, b].sort().join("_")
+}
+
 io.on("connection", (socket) => {
 
-  console.log("User connected:", socket.id)
-
-  // JOIN USER
-  socket.on("join", (username) => {
-
-    users[socket.id] = {
-      id: socket.id,
-      username
-    }
-
-    // update all users
+  // JOIN
+  socket.on("join", (user) => {
+    users[socket.id] = user
     io.emit("users", Object.values(users))
-
-    // system message
-    socket.broadcast.emit(
-      "system",
-      `${username} joined the chat`
-    )
-
   })
 
   // GLOBAL MESSAGE
@@ -52,73 +40,59 @@ io.on("connection", (socket) => {
     const user = users[socket.id]
     if (!user) return
 
-    io.emit("message", {
+    const msg = {
       user: user.username,
       text,
-      time: new Date().toLocaleTimeString()
-    })
+      time: Date.now()
+    }
 
+    chats.global.push(msg)
+
+    io.emit("message", msg)
   })
 
-  // PRIVATE MESSAGE (DM)
+  // PRIVATE DM (REAL STORAGE)
   socket.on("privateMessage", (data) => {
 
     const sender = users[socket.id]
     if (!sender) return
 
+    const key = getDMKey(sender.id, data.to)
+
+    if (!chats[key]) chats[key] = []
+
     const msg = {
       from: sender.username,
       text: data.text,
-      time: new Date().toLocaleTimeString()
+      time: Date.now()
     }
+
+    chats[key].push(msg)
 
     // send to receiver
     io.to(data.to).emit("privateMessage", msg)
 
     // send back to sender
     socket.emit("privateMessage", {
-      from: "You",
-      text: data.text,
-      time: msg.time
+      ...msg,
+      from: "You"
     })
 
   })
 
-  // TYPING (optional UI feature)
-  socket.on("typing", () => {
-
-    const user = users[socket.id]
-    if (!user) return
-
-    socket.broadcast.emit("typing", user.username)
-
+  // SEND CHAT HISTORY (TELEGRAM STYLE)
+  socket.on("loadChat", (chatId, cb) => {
+    cb(chats[chatId] || [])
   })
 
   // DISCONNECT
   socket.on("disconnect", () => {
-
-    const user = users[socket.id]
-
-    if (user) {
-
-      socket.broadcast.emit(
-        "system",
-        `${user.username} left the chat`
-      )
-
-      delete users[socket.id]
-
-      io.emit("users", Object.values(users))
-    }
-
-    console.log("User disconnected:", socket.id)
-
+    delete users[socket.id]
+    io.emit("users", Object.values(users))
   })
 
 })
 
-const PORT = process.env.PORT || 3000
-
-server.listen(PORT, () => {
-  console.log(`🚀 BROSKIX Chat running on port ${PORT}`)
+server.listen(3000, () => {
+  console.log("🔥 BROSKIX TELEGRAM 100% RUNNING")
 })
