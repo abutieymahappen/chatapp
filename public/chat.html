@@ -1,90 +1,138 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>BROSKIX CHAT</title>
-
-<style>
-body{
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BROSKIX CHAT</title><style>
+*{
 margin:0;
-background:#0f172a;
-color:white;
-font-family:Arial;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
 }
 
-header{
+body{
+background:#0f172a;
+color:white;
+height:100vh;
+display:flex;
+}
+
+.sidebar{
+width:250px;
+background:#111827;
+padding:15px;
+overflow-y:auto;
+}
+
+.sidebar h2{
+margin-bottom:15px;
+}
+
+.user{
+padding:8px;
+background:#1e293b;
+margin-bottom:8px;
+border-radius:8px;
+}
+
+.main{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+.header{
 background:#111827;
 padding:15px;
 text-align:center;
-font-size:22px;
+font-size:20px;
 font-weight:bold;
 }
 
-#online{
-text-align:center;
-padding:10px;
+#typing{
+padding:5px 15px;
+color:#94a3b8;
+font-size:14px;
+height:25px;
 }
 
-#messages{
-height:75vh;
+.messages{
+flex:1;
 overflow-y:auto;
-padding:10px;
+padding:15px;
 }
 
-.msg{
+.message{
 background:#1e293b;
 padding:10px;
-margin:8px 0;
+margin-bottom:10px;
 border-radius:10px;
 }
 
-form{
-display:flex;
+.system{
+background:#334155;
 padding:10px;
+margin-bottom:10px;
+border-radius:10px;
+font-style:italic;
 }
 
-input{
+.time{
+font-size:12px;
+color:#94a3b8;
+margin-top:4px;
+}
+
+.form{
+display:flex;
+padding:10px;
+background:#111827;
+}
+
+.form input{
 flex:1;
 padding:12px;
 border:none;
 outline:none;
+border-radius:10px;
 }
 
-button{
-padding:12px;
+.form button{
+margin-left:10px;
+padding:12px 20px;
 border:none;
+border-radius:10px;
 cursor:pointer;
 }
-</style>
-</head>
 
-<body>
+@media(max-width:700px){
 
-<header>BROSKIX CHAT</header>
+.sidebar{
+display:none;
+}
 
-<div id="online">Online: 0</div>
+}
+</style></head><body><div class="sidebar"><h2>Online Users</h2><div id="users"></div></div><div class="main"><div class="header">
+BROSKIX CHAT
+</div><div id="typing"></div><div class="messages" id="messages"></div><form class="form" id="form"><input
+id="input"
+placeholder="Type a message..."
+autocomplete="off">
 
-<div id="messages"></div>
-
-<form id="form">
-<input id="input" placeholder="Type message...">
-<button>Send</button>
-</form>
-
-<script src="/socket.io/socket.io.js"></script>
-
-<script>
+<button>
+Send
+</button></form></div><script src="/socket.io/socket.io.js"></script><script>
 
 const username =
 localStorage.getItem("username")
 
 if(!username){
-location.href="/"
+window.location.href="/"
 }
 
 const socket = io()
 
-socket.emit("join",username)
+socket.emit("join", username)
 
 const form =
 document.getElementById("form")
@@ -95,45 +143,102 @@ document.getElementById("input")
 const messages =
 document.getElementById("messages")
 
-form.addEventListener("submit",(e)=>{
+const users =
+document.getElementById("users")
+
+const typing =
+document.getElementById("typing")
+
+input.addEventListener("input", () => {
+
+socket.emit("typing")
+
+})
+
+form.addEventListener("submit", (e) => {
 
 e.preventDefault()
 
-if(input.value){
+if(!input.value.trim()) return
 
 socket.emit(
 "message",
 input.value
 )
 
-input.value=""
-}
+input.value = ""
+
 })
 
-socket.on("message",(data)=>{
+socket.on("message", (data) => {
 
 const div =
 document.createElement("div")
 
-div.className="msg"
+div.className = "message"
 
-div.innerHTML=
-`<b>${data.user}</b><br>${data.text}`
+div.innerHTML = `
+<b>${data.user}</b><br>
+${data.text}
+<div class="time">
+${data.time}
+</div>
+`
 
 messages.appendChild(div)
 
 messages.scrollTop =
 messages.scrollHeight
+
 })
 
-socket.on("online",(count)=>{
+socket.on("system", (msg) => {
 
-document.getElementById("online")
-.innerText =
-`Online: ${count}`
+const div =
+document.createElement("div")
+
+div.className = "system"
+
+div.textContent = msg
+
+messages.appendChild(div)
+
+messages.scrollTop =
+messages.scrollHeight
+
 })
 
-</script>
+socket.on("users", (list) => {
 
-</body>
-  </html>
+users.innerHTML = ""
+
+list.forEach(user => {
+
+const div =
+document.createElement("div")
+
+div.className = "user"
+
+div.textContent = user
+
+users.appendChild(div)
+
+})
+
+})
+
+socket.on("typing", (user) => {
+
+typing.textContent =
+`${user} is typing...`
+
+setTimeout(() => {
+
+typing.textContent = ""
+
+}, 1500)
+
+})
+
+</script></body>
+</html>
